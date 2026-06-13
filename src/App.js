@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
 const CATEGORIES = ['All', 'Tops', 'Bottoms', 'Dresses', 'Outerwear', 'Accessories', 'Footwear', 'Other'];
@@ -33,7 +33,19 @@ const SAMPLE_PRODUCTS = [
   },
 ];
 
-let nextId = 4;
+const STORAGE_KEY = 'catalog_products';
+
+function loadProducts() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return SAMPLE_PRODUCTS;
+}
+
+function getNextId(products) {
+  return products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+}
 
 function ProductForm({ initial, onSave, onClose }) {
   const [form, setForm] = useState(
@@ -131,10 +143,14 @@ function ProductDetail({ product, onClose, onEdit }) {
 }
 
 export default function App() {
-  const [products, setProducts] = useState(SAMPLE_PRODUCTS);
+  const [products, setProducts] = useState(loadProducts);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [modal, setModal] = useState(null); // null | { type: 'add'|'edit'|'view', product? }
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+  }, [products]);
 
   const filtered = products.filter(p => {
     const matchCat = category === 'All' || p.category === category;
@@ -143,7 +159,7 @@ export default function App() {
   });
 
   const handleAdd = data => {
-    setProducts(ps => [...ps, { ...data, id: nextId++ }]);
+    setProducts(ps => [...ps, { ...data, id: getNextId(ps) }]);
     setModal(null);
   };
 
