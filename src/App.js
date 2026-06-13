@@ -225,7 +225,7 @@ export default function App() {
       <header className="header">
         <div className="header-logo">
           <img src="/logo.svg" alt="Total Deals" className="logo-img" />
-          <span className="header-title">CATALOG</span>
+          <span className="header-title">CATÁLOGO TD LIQUIDATIONS</span>
         </div>
         <div className="header-actions">
           <span className="count-badge">{products.length} products</span>
