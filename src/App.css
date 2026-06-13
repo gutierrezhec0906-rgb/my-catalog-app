@@ -257,5 +257,21 @@
 .detail-section-title { font-size: 0.85rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; }
 .detail-description { font-size: 0.95rem; color: #555; line-height: 1.6; white-space: pre-wrap; }
 
+/* VER MAS YouTube link */
+.btn-ver-mas {
+  display: inline-block;
+  background: #cc1020;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  transition: background 0.2s;
+  text-align: center;
+}
+.btn-ver-mas:hover { background: #a50d1a; }
+
 /* Count badge */
 .count-badge { font-size: 0.85rem; color: #888; }

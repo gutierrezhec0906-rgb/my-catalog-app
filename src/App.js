@@ -49,7 +49,7 @@ function getNextId(products) {
 
 function ProductForm({ initial, onSave, onClose }) {
   const [form, setForm] = useState(
-    initial || { name: '', category: 'Tops', price: '', moq: '', image: '', details: '' }
+    initial || { name: '', category: 'Tops', price: '', moq: '', image: '', details: '', videoUrl: '' }
   );
   const [dragging, setDragging] = useState(false);
 
@@ -139,6 +139,10 @@ function ProductForm({ initial, onSave, onClose }) {
           )}
         </div>
         <div className="form-group">
+          <label>Video de YouTube (URL)</label>
+          <input value={form.videoUrl} onChange={e => set('videoUrl', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+        </div>
+        <div className="form-group">
           <label>Details / Description</label>
           <textarea value={form.details} onChange={e => set('details', e.target.value)} placeholder="Materials, sizes, colors, special features..." rows={4} />
         </div>
@@ -177,6 +181,19 @@ function ProductDetail({ product, onClose, onEdit }) {
             <hr className="detail-divider" />
             <div className="detail-section-title">Details</div>
             <div className="detail-description">{product.details}</div>
+          </>
+        )}
+        {product.videoUrl && (
+          <>
+            <hr className="detail-divider" />
+            <a
+              href={product.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ver-mas"
+            >
+              ▶ VER MAS
+            </a>
           </>
         )}
       </div>
