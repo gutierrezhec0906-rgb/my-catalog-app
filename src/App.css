@@ -257,6 +257,44 @@
 .detail-section-title { font-size: 0.85rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; }
 .detail-description { font-size: 0.95rem; color: #555; line-height: 1.6; white-space: pre-wrap; }
 
+/* Lead capture modal */
+.lead-modal { max-width: 480px; }
+.lead-header { background: #1a3a8f; border-radius: 14px 14px 0 0; padding: 16px 20px; }
+.lead-header .btn-close { color: white; font-size: 1.6rem; }
+.lead-header .btn-close:hover { color: #ddd; }
+.lead-intro { padding: 20px 24px 0; }
+.lead-intro h2 { font-size: 1.2rem; color: #1a3a8f; font-weight: 700; margin-bottom: 4px; }
+.lead-intro p { font-size: 0.9rem; color: #666; }
+
+.lead-options { display: flex; gap: 12px; }
+.lead-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  text-align: center;
+  transition: all 0.2s;
+}
+.lead-option input[type="radio"] { display: none; }
+.lead-option.selected { border-color: #cc1020; background: #fff5f5; color: #cc1020; }
+.lead-option:hover { border-color: #cc1020; }
+.option-icon { font-size: 1.8rem; }
+
+.lead-error { color: #cc1020; font-size: 0.85rem; background: #fff0f0; padding: 8px 12px; border-radius: 6px; }
+
+.lead-success { padding: 40px 24px; text-align: center; }
+.lead-success-icon { font-size: 3rem; margin-bottom: 12px; }
+.lead-success h3 { font-size: 1.2rem; color: #1a3a8f; margin-bottom: 8px; }
+.lead-success p { color: #666; font-size: 0.95rem; }
+
 /* VER MAS YouTube link */
 .btn-ver-mas {
   display: inline-block;

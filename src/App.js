@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
+import emailjs from '@emailjs/browser';
 import './App.css';
+
+// ── EmailJS config ──────────────────────────────────────────────
+// Replace these three values after setting up your EmailJS account
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+// ────────────────────────────────────────────────────────────────
+
+const LEAD_STORAGE_KEY = 'td_lead_submitted';
 
 const CATEGORIES = ['All', 'Tops', 'Bottoms', 'Dresses', 'Outerwear', 'Accessories', 'Footwear', 'Other'];
 
@@ -45,6 +55,118 @@ function loadProducts() {
 
 function getNextId(products) {
   return products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+}
+
+function LeadModal({ onClose }) {
+  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', telefono: '', tipo: '' });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
+
+  const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    if (!form.nombre || !form.apellido || !form.email || !form.telefono || !form.tipo) {
+      setError('Por favor completa todos los campos.');
+      return;
+    }
+    setSending(true);
+    setError('');
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          nombre:    form.nombre,
+          apellido:  form.apellido,
+          email:     form.email,
+          telefono:  form.telefono,
+          tipo:      form.tipo,
+          to_email:  'totaldeals.ventas@gmail.com',
+        },
+        EMAILJS_PUBLIC_KEY
+      );
+      setSent(true);
+      localStorage.setItem(LEAD_STORAGE_KEY, '1');
+    } catch {
+      setError('Error al enviar. Por favor intenta de nuevo.');
+    }
+    setSending(false);
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal lead-modal">
+        <div className="modal-header lead-header">
+          <div>
+            <img src="/logo.svg" alt="Total Deals" style={{ height: 44 }} />
+          </div>
+          <button className="btn-close" onClick={onClose}>×</button>
+        </div>
+
+        {sent ? (
+          <div className="lead-success">
+            <div className="lead-success-icon">✅</div>
+            <h3>¡Gracias por tu interés!</h3>
+            <p>Nos pondremos en contacto contigo pronto.</p>
+            <button className="btn-save" style={{ marginTop: 16 }} onClick={onClose}>Ver Catálogo</button>
+          </div>
+        ) : (
+          <>
+            <div className="lead-intro">
+              <h2>¡Bienvenido a TD Liquidations!</h2>
+              <p>Déjanos tus datos y un asesor te contactará.</p>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="form">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Nombre *</label>
+                    <input value={form.nombre} onChange={e => set('nombre', e.target.value)} placeholder="Tu nombre" />
+                  </div>
+                  <div className="form-group">
+                    <label>Apellido *</label>
+                    <input value={form.apellido} onChange={e => set('apellido', e.target.value)} placeholder="Tu apellido" />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="tucorreo@email.com" />
+                </div>
+                <div className="form-group">
+                  <label>Teléfono con Lada *</label>
+                  <input value={form.telefono} onChange={e => set('telefono', e.target.value)} placeholder="+52 55 1234 5678" />
+                </div>
+                <div className="form-group">
+                  <label>¿Cuál es tu situación? *</label>
+                  <div className="lead-options">
+                    <label className={`lead-option ${form.tipo === 'negocio' ? 'selected' : ''}`}>
+                      <input type="radio" name="tipo" value="negocio" checked={form.tipo === 'negocio'} onChange={() => set('tipo', 'negocio')} />
+                      <span className="option-icon">🏪</span>
+                      <span>Ya tengo un Negocio</span>
+                    </label>
+                    <label className={`lead-option ${form.tipo === 'empezando' ? 'selected' : ''}`}>
+                      <input type="radio" name="tipo" value="empezando" checked={form.tipo === 'empezando'} onChange={() => set('tipo', 'empezando')} />
+                      <span className="option-icon">🚀</span>
+                      <span>Estoy empezando</span>
+                    </label>
+                  </div>
+                </div>
+                {error && <div className="lead-error">{error}</div>}
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn-cancel" onClick={onClose}>Omitir por ahora</button>
+                <button type="submit" className="btn-save" disabled={sending}>
+                  {sending ? 'Enviando...' : 'Enviar información'}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function ProductForm({ initial, onSave, onClose }) {
@@ -209,7 +331,8 @@ export default function App() {
   const [products, setProducts] = useState(loadProducts);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [modal, setModal] = useState(null); // null | { type: 'add'|'edit'|'view', product? }
+  const [modal, setModal] = useState(null);
+  const [showLead, setShowLead] = useState(!localStorage.getItem(LEAD_STORAGE_KEY));
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
@@ -290,6 +413,8 @@ export default function App() {
           ))}
         </div>
       )}
+
+      {showLead && <LeadModal onClose={() => setShowLead(false)} />}
 
       {modal && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
