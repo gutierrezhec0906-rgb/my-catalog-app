@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <!-- Outer circle border -->
+  <circle cx="150" cy="150" r="138" fill="white" stroke="#1a3a8f" stroke-width="3"/>
+
+  <!-- Circular text path -->
+  <defs>
+    <path id="topArc" d="M 30,150 A 120,120 0 0,1 270,150"/>
+    <path id="bottomArc" d="M 45,175 A 120,120 0 0,0 255,175"/>
+  </defs>
+
+  <!-- Top arc text: Centroamérica • México • Los -->
+  <text font-family="Georgia, serif" font-size="18" fill="#1a3a8f" letter-spacing="2">
+    <textPath href="#topArc" startOffset="2%">Centroamérica • México • Los</textPath>
+  </text>
+
+  <!-- Bottom arc text: Ángeles • -->
+  <text font-family="Georgia, serif" font-size="18" fill="#1a3a8f" letter-spacing="2">
+    <textPath href="#bottomArc" startOffset="28%">Ángeles •</textPath>
+  </text>
+
+  <!-- T letter -->
+  <text x="80" y="175" font-family="Georgia, serif" font-size="110" font-weight="bold" fill="#cc1020" letter-spacing="-5">T</text>
+  <!-- D letter -->
+  <text x="158" y="175" font-family="Georgia, serif" font-size="110" font-weight="bold" fill="#cc1020">D</text>
+
+  <!-- TOTAL DEALS text -->
+  <text x="150" y="200" font-family="Georgia, serif" font-size="16" font-weight="bold" fill="#cc1020" text-anchor="middle" letter-spacing="4">TOTAL DEALS</text>
+</svg>

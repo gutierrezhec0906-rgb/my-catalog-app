@@ -3,22 +3,25 @@
 
 /* Header */
 .header {
-  background: #1a1a2e;
-  color: white;
+  background: white;
+  color: #1a3a8f;
   padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  height: 72px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 3px solid #cc1020;
 }
-.header h1 { font-size: 1.5rem; letter-spacing: 2px; font-weight: 700; }
+.header-logo { display: flex; align-items: center; gap: 12px; }
+.logo-img { height: 52px; width: 52px; object-fit: contain; }
+.header-title { font-size: 1.4rem; letter-spacing: 3px; font-weight: 700; color: #1a3a8f; }
 .header-actions { display: flex; gap: 12px; align-items: center; }
 .btn-add {
-  background: #e94560;
+  background: #cc1020;
   color: white;
   border: none;
   padding: 8px 18px;
@@ -28,7 +31,7 @@
   font-weight: 600;
   transition: background 0.2s;
 }
-.btn-add:hover { background: #c73652; }
+.btn-add:hover { background: #a50d1a; }
 
 /* Search & Filter bar */
 .toolbar {
@@ -49,7 +52,7 @@
   font-size: 0.95rem;
   outline: none;
 }
-.search-input:focus { border-color: #e94560; }
+.search-input:focus { border-color: #cc1020; }
 .filter-select {
   padding: 9px 12px;
   border: 1px solid #ddd;
@@ -59,7 +62,7 @@
   cursor: pointer;
   outline: none;
 }
-.filter-select:focus { border-color: #e94560; }
+.filter-select:focus { border-color: #cc1020; }
 
 /* Product grid */
 .catalog-grid {
@@ -99,7 +102,7 @@
 .card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
 .card-name { font-size: 1.05rem; font-weight: 700; color: #1a1a2e; }
 .card-category { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-.card-price { font-size: 1.2rem; font-weight: 700; color: #e94560; margin-top: 4px; }
+.card-price { font-size: 1.2rem; font-weight: 700; color: #cc1020; margin-top: 4px; }
 .card-moq { font-size: 0.85rem; color: #555; }
 .card-moq span { font-weight: 600; color: #1a1a2e; }
 
@@ -109,11 +112,11 @@
   display: flex;
   gap: 8px;
 }
-.btn-view { flex: 1; padding: 8px; border: 1px solid #e94560; background: white; color: #e94560; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
-.btn-view:hover { background: #e94560; color: white; }
+.btn-view { flex: 1; padding: 8px; border: 1px solid #cc1020; background: white; color: #cc1020; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+.btn-view:hover { background: #cc1020; color: white; }
 .btn-edit { padding: 8px 12px; border: 1px solid #ddd; background: white; color: #555; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
 .btn-edit:hover { background: #f0f0f0; }
-.btn-delete { padding: 8px 12px; border: 1px solid #ddd; background: white; color: #e94560; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+.btn-delete { padding: 8px 12px; border: 1px solid #ddd; background: white; color: #cc1020; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
 .btn-delete:hover { background: #ffeef2; }
 
 /* Empty state */
@@ -167,7 +170,7 @@
 }
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus { border-color: #e94560; }
+.form-group textarea:focus { border-color: #cc1020; }
 .form-group textarea { resize: vertical; min-height: 80px; }
 
 /* Upload zone */
@@ -185,7 +188,7 @@
   position: relative;
   transition: border-color 0.2s, background 0.2s;
 }
-.upload-zone:hover, .upload-zone.dragging { border-color: #e94560; background: #fff5f7; }
+.upload-zone:hover, .upload-zone.dragging { border-color: #cc1020; background: #fff5f7; }
 .upload-zone.has-image { border-style: solid; border-color: #ddd; }
 
 .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
@@ -207,13 +210,13 @@
   margin-top: 6px;
   background: none;
   border: none;
-  color: #e94560;
+  color: #cc1020;
   font-size: 0.82rem;
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
 }
-.btn-remove-image:hover { color: #c73652; }
+.btn-remove-image:hover { color: #a50d1a; }
 
 .form-actions {
   padding: 16px 24px 20px;
@@ -224,8 +227,8 @@
 }
 .btn-cancel { padding: 10px 20px; border: 1px solid #ddd; background: white; color: #555; border-radius: 8px; cursor: pointer; font-size: 0.95rem; }
 .btn-cancel:hover { background: #f5f5f5; }
-.btn-save { padding: 10px 24px; background: #e94560; border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600; }
-.btn-save:hover { background: #c73652; }
+.btn-save { padding: 10px 24px; background: #cc1020; border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600; }
+.btn-save:hover { background: #a50d1a; }
 
 /* Detail modal */
 .detail-image {
@@ -248,7 +251,7 @@
 .stat { display: flex; flex-direction: column; gap: 2px; }
 .stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
 .stat-value { font-size: 1.3rem; font-weight: 700; }
-.stat-value.price { color: #e94560; }
+.stat-value.price { color: #cc1020; }
 .stat-value.moq { color: #1a1a2e; }
 .detail-divider { border: none; border-top: 1px solid #f0f0f0; }
 .detail-section-title { font-size: 0.85rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; }

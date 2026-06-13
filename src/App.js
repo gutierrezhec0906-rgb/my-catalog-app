@@ -223,7 +223,10 @@ export default function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>MY CATALOG</h1>
+        <div className="header-logo">
+          <img src="/logo.svg" alt="Total Deals" className="logo-img" />
+          <span className="header-title">CATALOG</span>
+        </div>
         <div className="header-actions">
           <span className="count-badge">{products.length} products</span>
           <button className="btn-add" onClick={() => setModal({ type: 'add' })}>+ Add Product</button>
