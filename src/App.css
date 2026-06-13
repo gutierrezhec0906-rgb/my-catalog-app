@@ -170,9 +170,10 @@
 .form-group textarea:focus { border-color: #e94560; }
 .form-group textarea { resize: vertical; min-height: 80px; }
 
-.image-preview {
+/* Upload zone */
+.upload-zone {
   width: 100%;
-  height: 160px;
+  height: 180px;
   border: 2px dashed #ddd;
   border-radius: 8px;
   display: flex;
@@ -180,10 +181,39 @@
   justify-content: center;
   overflow: hidden;
   background: #fafafa;
-  margin-top: 6px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
 }
-.image-preview img { width: 100%; height: 100%; object-fit: cover; }
-.image-preview .placeholder { color: #bbb; font-size: 2rem; }
+.upload-zone:hover, .upload-zone.dragging { border-color: #e94560; background: #fff5f7; }
+.upload-zone.has-image { border-style: solid; border-color: #ddd; }
+
+.upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.upload-icon { font-size: 2rem; }
+.upload-text { font-size: 0.9rem; color: #555; font-weight: 500; }
+.upload-hint { font-size: 0.78rem; color: #aaa; }
+
+.upload-zone img { width: 100%; height: 100%; object-fit: cover; }
+.upload-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s;
+}
+.upload-overlay span { color: white; font-size: 0.85rem; font-weight: 600; }
+.upload-zone:hover .upload-overlay { opacity: 1; }
+
+.btn-remove-image {
+  margin-top: 6px;
+  background: none;
+  border: none;
+  color: #e94560;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.btn-remove-image:hover { color: #c73652; }
 
 .form-actions {
   padding: 16px 24px 20px;

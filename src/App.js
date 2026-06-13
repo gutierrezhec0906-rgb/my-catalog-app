@@ -51,8 +51,24 @@ function ProductForm({ initial, onSave, onClose }) {
   const [form, setForm] = useState(
     initial || { name: '', category: 'Tops', price: '', moq: '', image: '', details: '' }
   );
+  const [dragging, setDragging] = useState(false);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
+
+  const readFile = file => {
+    if (!file || !file.type.startsWith('image/')) return alert('Please select an image file.');
+    const reader = new FileReader();
+    reader.onload = e => set('image', e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileInput = e => readFile(e.target.files[0]);
+
+  const handleDrop = e => {
+    e.preventDefault();
+    setDragging(false);
+    readFile(e.dataTransfer.files[0]);
+  };
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -86,11 +102,41 @@ function ProductForm({ initial, onSave, onClose }) {
           <input type="number" min="1" value={form.moq} onChange={e => set('moq', e.target.value)} placeholder="e.g. 50" />
         </div>
         <div className="form-group">
-          <label>Image URL</label>
-          <input value={form.image} onChange={e => set('image', e.target.value)} placeholder="https://..." />
-          <div className="image-preview">
-            {form.image ? <img src={form.image} alt="preview" onError={e => { e.target.style.display='none'; }} /> : <span className="placeholder">🖼️</span>}
+          <label>Product Image</label>
+          <div
+            className={`upload-zone ${dragging ? 'dragging' : ''} ${form.image ? 'has-image' : ''}`}
+            onDragOver={e => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('file-input').click()}
+          >
+            {form.image ? (
+              <>
+                <img src={form.image} alt="preview" />
+                <div className="upload-overlay">
+                  <span>Click or drop to replace</span>
+                </div>
+              </>
+            ) : (
+              <div className="upload-placeholder">
+                <span className="upload-icon">📷</span>
+                <span className="upload-text">Click to upload or drag & drop</span>
+                <span className="upload-hint">JPG, PNG, WEBP supported</span>
+              </div>
+            )}
           </div>
+          <input
+            id="file-input"
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleFileInput}
+          />
+          {form.image && (
+            <button type="button" className="btn-remove-image" onClick={() => set('image', '')}>
+              Remove image
+            </button>
+          )}
         </div>
         <div className="form-group">
           <label>Details / Description</label>
