@@ -467,7 +467,8 @@ export default function App() {
         <AdminLoginModal
           onLogin={() => { setIsAdmin(true); setShowAdminLogin(false); }}
           onClose={() => setShowAdminLogin(false)}
-        />}
+        />
+      )}
 
       {modal && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
