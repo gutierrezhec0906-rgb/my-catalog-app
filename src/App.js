@@ -169,7 +169,44 @@ function LeadModal({ onClose }) {
   );
 }
 
-function ProductForm({ initial, onSave, onClose }) {
+const ADMIN_PASSWORD = 'totaldeals2024';
+
+function AdminLoginModal({ onLogin, onClose }) {
+  const [pwd, setPwd] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (pwd === ADMIN_PASSWORD) { onLogin(); }
+    else { setError('Contraseña incorrecta.'); setPwd(''); }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{ maxWidth: 360 }}>
+        <div className="modal-header">
+          <h2>Acceso Administrador</h2>
+          <button className="btn-close" onClick={onClose}>×</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="form">
+            <div className="form-group">
+              <label>Contraseña</label>
+              <input type="password" value={pwd} onChange={e => setPwd(e.target.value)} placeholder="Ingresa la contraseña" autoFocus />
+            </div>
+            {error && <div className="lead-error">{error}</div>}
+          </div>
+          <div className="form-actions">
+            <button type="button" className="btn-cancel" onClick={onClose}>Cancelar</button>
+            <button type="submit" className="btn-save">Entrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
   const [form, setForm] = useState(
     initial || { name: '', category: 'Tops', price: '', moq: '', image: '', details: '', videoUrl: '' }
   );
@@ -320,8 +357,8 @@ function ProductDetail({ product, onClose, onEdit }) {
         )}
       </div>
       <div className="form-actions">
-        <button className="btn-cancel" onClick={onClose}>Close</button>
-        <button className="btn-save" onClick={onEdit}>Edit Product</button>
+        <button className="btn-cancel" onClick={onClose}>Cerrar</button>
+        {onEdit && <button className="btn-save" onClick={onEdit}>Editar</button>}
       </div>
     </>
   );
@@ -333,6 +370,8 @@ export default function App() {
   const [category, setCategory] = useState('All');
   const [modal, setModal] = useState(null);
   const [showLead, setShowLead] = useState(!localStorage.getItem(LEAD_STORAGE_KEY));
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
@@ -368,8 +407,15 @@ export default function App() {
           <span className="header-title">CATÁLOGO TD LIQUIDATIONS</span>
         </div>
         <div className="header-actions">
-          <span className="count-badge">{products.length} products</span>
-          <button className="btn-add" onClick={() => setModal({ type: 'add' })}>+ Add Product</button>
+          <span className="count-badge">{products.length} productos</span>
+          {isAdmin ? (
+            <>
+              <button className="btn-add" onClick={() => setModal({ type: 'add' })}>+ Agregar</button>
+              <button className="btn-admin-logout" onClick={() => setIsAdmin(false)}>🔓 Salir</button>
+            </>
+          ) : (
+            <button className="btn-admin-login" onClick={() => setShowAdminLogin(true)}>🔐</button>
+          )}
         </div>
       </header>
 
@@ -405,9 +451,11 @@ export default function App() {
                 <div className="card-moq">MOQ: <span>{p.moq} units</span></div>
               </div>
               <div className="card-footer">
-                <button className="btn-view" onClick={() => setModal({ type: 'view', product: p })}>View Details</button>
-                <button className="btn-edit" onClick={() => setModal({ type: 'edit', product: p })}>✏️</button>
-                <button className="btn-delete" onClick={() => handleDelete(p.id)}>🗑️</button>
+                <button className="btn-view" onClick={() => setModal({ type: 'view', product: p })}>Ver Detalles</button>
+                {isAdmin && <>
+                  <button className="btn-edit" onClick={() => setModal({ type: 'edit', product: p })}>✏️</button>
+                  <button className="btn-delete" onClick={() => handleDelete(p.id)}>🗑️</button>
+                </>}
               </div>
             </div>
           ))}
@@ -415,6 +463,11 @@ export default function App() {
       )}
 
       {showLead && <LeadModal onClose={() => setShowLead(false)} />}
+      {showAdminLogin && (
+        <AdminLoginModal
+          onLogin={() => { setIsAdmin(true); setShowAdminLogin(false); }}
+          onClose={() => setShowAdminLogin(false)}
+        />}
 
       {modal && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
@@ -428,7 +481,7 @@ export default function App() {
                 <ProductDetail
                   product={modal.product}
                   onClose={() => setModal(null)}
-                  onEdit={() => setModal({ type: 'edit', product: modal.product })}
+                  onEdit={isAdmin ? () => setModal({ type: 'edit', product: modal.product }) : null}
                 />
               </>
             )}
