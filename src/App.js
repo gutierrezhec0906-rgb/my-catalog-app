@@ -206,7 +206,7 @@ function AdminLoginModal({ onLogin, onClose }) {
   );
 }
 
-
+function ProductForm({ initial, onSave, onClose }) {
   const [form, setForm] = useState(
     initial || { name: '', category: 'Tops', price: '', moq: '', image: '', details: '', videoUrl: '' }
   );
