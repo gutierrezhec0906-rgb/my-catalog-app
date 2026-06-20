@@ -4,9 +4,9 @@ import './App.css';
 
 // ── EmailJS config ──────────────────────────────────────────────
 // Replace these three values after setting up your EmailJS account
-const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID  = 'service_r4ky2a';
+const EMAILJS_TEMPLATE_ID = 'template_tf7c2v4';
+const EMAILJS_PUBLIC_KEY  = 'vjckp7pkqU64Ma_fv';
 // ────────────────────────────────────────────────────────────────
 
 const LEAD_STORAGE_KEY = 'td_lead_submitted';
