@@ -16,18 +16,29 @@
   z-index: 100;
   border-bottom: 3px solid #cc1020;
 }
-.header-logo { display: flex; align-items: center; gap: 12px; }
+.header-logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.logo-img { height: 44px; width: 44px; object-fit: contain; }
+.header-title { font-size: 0.85rem; letter-spacing: 1px; font-weight: 700; color: #1a3a8f; line-height: 1.2; }
 .header-contact { display: flex; align-items: center; }
 .whatsapp-link {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 6px;
   text-decoration: none; color: #1a3a8f;
   background: #e8f5e9; border-radius: 8px;
-  padding: 6px 12px; transition: background 0.2s;
+  padding: 5px 10px; transition: background 0.2s;
+  white-space: nowrap;
 }
 .whatsapp-link:hover { background: #c8e6c9; }
-.whatsapp-icon { width: 22px; height: 22px; color: #25d366; flex-shrink: 0; }
-.contact-label { font-weight: 700; font-size: 0.82rem; color: #1a3a8f; white-space: nowrap; }
-.contact-phones { font-size: 0.78rem; color: #333; line-height: 1.4; }
+.whatsapp-icon { width: 20px; height: 20px; color: #25d366; flex-shrink: 0; }
+.contact-label { font-weight: 700; font-size: 0.78rem; color: #1a3a8f; }
+.contact-phones { font-size: 0.72rem; color: #333; line-height: 1.5; }
+
+@media (max-width: 600px) {
+  .header { padding: 6px 10px; height: auto; flex-wrap: wrap; gap: 4px; }
+  .header-title { font-size: 0.72rem; letter-spacing: 0.5px; }
+  .logo-img { height: 34px; width: 34px; }
+  .whatsapp-link { padding: 4px 8px; gap: 4px; }
+  .contact-phones { font-size: 0.68rem; }
+}
 .logo-img { height: 52px; width: 52px; object-fit: contain; }
 .header-title { font-size: 1.1rem; letter-spacing: 2px; font-weight: 700; color: #1a3a8f; }
 .header-actions { display: flex; gap: 12px; align-items: center; }
@@ -321,30 +332,6 @@
   text-align: center;
 }
 .btn-ver-mas:hover { background: #a50d1a; }
-
-/* Admin controls */
-.btn-admin-login {
-  background: none;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #aaa;
-  transition: all 0.2s;
-}
-.btn-admin-login:hover { border-color: #1a3a8f; color: #1a3a8f; }
-.btn-admin-logout {
-  background: none;
-  border: 1px solid #cc1020;
-  color: #cc1020;
-  border-radius: 6px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-.btn-admin-logout:hover { background: #ffeef0; }
 
 /* Count badge */
 .count-badge { font-size: 0.85rem; color: #888; }
