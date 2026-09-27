@@ -239,23 +239,25 @@ function ProductForm({ initial, onSave, onClose }) {
   const [form, setForm] = useState(
     initial
       ? { ...initial, images: initImages }
-      : { name: '', category: 'Tops', price: '', moq: '', images: [], details: '', videoUrl: '' }
+      : { name: '', category: 'Ropa Adultos', price: '', moq: '', images: [], details: '', videoUrl: '' }
   );
   const [draggingIdx, setDraggingIdx] = useState(null);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
   const readFiles = files => {
-    const remaining = MAX_IMAGES - form.images.length;
-    const toRead = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, remaining);
-    if (toRead.length === 0) {
-      if (form.images.length >= MAX_IMAGES) alert(`Máximo ${MAX_IMAGES} imágenes por producto.`);
-      else alert('Por favor selecciona archivos de imagen.');
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) {
+      alert('Por favor selecciona archivos de imagen.');
       return;
     }
-    toRead.forEach(file => {
+    // Read all selected files; the updater function enforces the MAX_IMAGES cap
+    imageFiles.forEach(file => {
       const reader = new FileReader();
-      reader.onload = e => setForm(f => ({ ...f, images: [...f.images, e.target.result] }));
+      reader.onload = e => setForm(f => {
+        if (f.images.length >= MAX_IMAGES) return f; // cap inside updater to avoid stale closure
+        return { ...f, images: [...f.images, e.target.result] };
+      });
       reader.readAsDataURL(file);
     });
   };
@@ -556,7 +558,7 @@ export default function App() {
                 </div>
                 <ProductForm
                   initial={modal.product}
-                  onSave={data => handleEdit({ ...modal.product, ...data })}
+                  onSave={data => handleEdit({ id: modal.product.id, ...data })}
                   onClose={() => setModal(null)}
                 />
               </>
