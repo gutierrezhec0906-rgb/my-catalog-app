@@ -8,7 +8,7 @@ const EMAILJS_PUBLIC_KEY  = 'vjckp7pkqU64Ma_fv';
 
 const LEAD_STORAGE_KEY = 'td_lead_submitted';
 const STORAGE_KEY = 'catalog_products';
-const ADMIN_PASSWORD = 'totaldeals2024';
+const ADMIN_PASSWORD = '1234';
 const MAX_IMAGES = 5;
 
 const CATEGORIES = ['Todos', 'Ropa Niños', 'Ropa Adultos', 'Calzado', 'Accesorios', 'Mercancía General'];
