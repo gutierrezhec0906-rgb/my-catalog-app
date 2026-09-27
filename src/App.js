@@ -2,16 +2,22 @@ import { useState, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
 import './App.css';
 
-// ── EmailJS config ──────────────────────────────────────────────
-// Replace these three values after setting up your EmailJS account
 const EMAILJS_SERVICE_ID  = 'service_r4ky2a';
 const EMAILJS_TEMPLATE_ID = 'template_tf7c2v4';
 const EMAILJS_PUBLIC_KEY  = 'vjckp7pkqU64Ma_fv';
-// ────────────────────────────────────────────────────────────────
 
 const LEAD_STORAGE_KEY = 'td_lead_submitted';
+const STORAGE_KEY = 'catalog_products';
+const ADMIN_PASSWORD = 'totaldeals2024';
+const MAX_IMAGES = 5;
 
 const CATEGORIES = ['Todos', 'Tops', 'Bottoms', 'Vestidos', 'Abrigos', 'Accesorios', 'Calzado', 'Otro'];
+
+// Normalize old single-image products to images array
+function normalizeProduct(p) {
+  if (p.images && p.images.length > 0) return p;
+  return { ...p, images: p.image ? [p.image] : [] };
+}
 
 const SAMPLE_PRODUCTS = [
   {
@@ -20,7 +26,7 @@ const SAMPLE_PRODUCTS = [
     category: 'Tops',
     price: 12.99,
     moq: 50,
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
+    images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop'],
     details: 'Camiseta básica de algodón 100% premium. Disponible en tallas XS–3XL. Corte unisex. Perfecta para uso diario y fácil de combinar con cualquier outfit.',
   },
   {
@@ -29,7 +35,7 @@ const SAMPLE_PRODUCTS = [
     category: 'Bottoms',
     price: 34.50,
     moq: 30,
-    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop',
+    images: ['https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop'],
     details: 'Mezclilla stretch con tiro alto. Estilo 5 bolsillos. Disponible en lavado claro, oscuro y negro. Tallas 24–38.',
   },
   {
@@ -38,23 +44,57 @@ const SAMPLE_PRODUCTS = [
     category: 'Vestidos',
     price: 28.00,
     moq: 20,
-    image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop',
+    images: ['https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop'],
     details: 'Vestido midi de gasa ligera con estampado floral. Cintura ajustable con lazo. Escote en V. Ideal para colecciones primavera/verano.',
   },
 ];
 
-const STORAGE_KEY = 'catalog_products';
-
 function loadProducts() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
+    if (saved) return JSON.parse(saved).map(normalizeProduct);
   } catch {}
   return SAMPLE_PRODUCTS;
 }
 
 function getNextId(products) {
   return products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+}
+
+// Small carousel used on both the card and the detail modal
+function ImageCarousel({ images, alt, height, borderRadius }) {
+  const [idx, setIdx] = useState(0);
+  const imgs = images && images.length > 0 ? images : [];
+
+  const prev = e => { e.stopPropagation(); setIdx(i => (i - 1 + imgs.length) % imgs.length); };
+  const next = e => { e.stopPropagation(); setIdx(i => (i + 1) % imgs.length); };
+
+  if (imgs.length === 0) {
+    return (
+      <div className="carousel-empty" style={{ height, borderRadius }}>👕</div>
+    );
+  }
+
+  return (
+    <div className="carousel" style={{ height, borderRadius }}>
+      <img src={imgs[idx]} alt={`${alt} ${idx + 1}`} className="carousel-img" />
+      {imgs.length > 1 && (
+        <>
+          <button className="carousel-btn carousel-prev" onClick={prev}>‹</button>
+          <button className="carousel-btn carousel-next" onClick={next}>›</button>
+          <div className="carousel-dots">
+            {imgs.map((_, i) => (
+              <span
+                key={i}
+                className={`carousel-dot ${i === idx ? 'active' : ''}`}
+                onClick={e => { e.stopPropagation(); setIdx(i); }}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 function LeadModal({ onClose }) {
@@ -77,14 +117,7 @@ function LeadModal({ onClose }) {
       await emailjs.send(
         EMAILJS_SERVICE_ID,
         EMAILJS_TEMPLATE_ID,
-        {
-          nombre:    form.nombre,
-          apellido:  form.apellido,
-          email:     form.email,
-          telefono:  form.telefono,
-          tipo:      form.tipo,
-          to_email:  'totaldeals.ventas@gmail.com',
-        },
+        { nombre: form.nombre, apellido: form.apellido, email: form.email, telefono: form.telefono, tipo: form.tipo, to_email: 'totaldeals.ventas@gmail.com' },
         EMAILJS_PUBLIC_KEY
       );
       setSent(true);
@@ -99,12 +132,9 @@ function LeadModal({ onClose }) {
     <div className="modal-overlay">
       <div className="modal lead-modal">
         <div className="modal-header lead-header">
-          <div>
-            <img src="/logo.svg" alt="Total Deals" style={{ height: 44 }} />
-          </div>
+          <div><img src="/logo.svg" alt="Total Deals" style={{ height: 44 }} /></div>
           <button className="btn-close" onClick={onClose}>×</button>
         </div>
-
         {sent ? (
           <div className="lead-success">
             <div className="lead-success-icon">✅</div>
@@ -169,8 +199,6 @@ function LeadModal({ onClose }) {
   );
 }
 
-const ADMIN_PASSWORD = 'totaldeals2024';
-
 function AdminLoginModal({ onLogin, onClose }) {
   const [pwd, setPwd] = useState('');
   const [error, setError] = useState('');
@@ -207,26 +235,37 @@ function AdminLoginModal({ onLogin, onClose }) {
 }
 
 function ProductForm({ initial, onSave, onClose }) {
+  const initImages = initial ? (initial.images || (initial.image ? [initial.image] : [])) : [];
   const [form, setForm] = useState(
-    initial || { name: '', category: 'Tops', price: '', moq: '', image: '', details: '', videoUrl: '' }
+    initial
+      ? { ...initial, images: initImages }
+      : { name: '', category: 'Tops', price: '', moq: '', images: [], details: '', videoUrl: '' }
   );
-  const [dragging, setDragging] = useState(false);
+  const [draggingIdx, setDraggingIdx] = useState(null);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
-  const readFile = file => {
-    if (!file || !file.type.startsWith('image/')) return alert('Por favor selecciona un archivo de imagen.');
-    const reader = new FileReader();
-    reader.onload = e => set('image', e.target.result);
-    reader.readAsDataURL(file);
+  const readFiles = files => {
+    const remaining = MAX_IMAGES - form.images.length;
+    const toRead = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, remaining);
+    if (toRead.length === 0) {
+      if (form.images.length >= MAX_IMAGES) alert(`Máximo ${MAX_IMAGES} imágenes por producto.`);
+      else alert('Por favor selecciona archivos de imagen.');
+      return;
+    }
+    toRead.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => setForm(f => ({ ...f, images: [...f.images, e.target.result] }));
+      reader.readAsDataURL(file);
+    });
   };
 
-  const handleFileInput = e => readFile(e.target.files[0]);
+  const removeImage = idx => setForm(f => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
 
   const handleDrop = e => {
     e.preventDefault();
-    setDragging(false);
-    readFile(e.dataTransfer.files[0]);
+    setDraggingIdx(null);
+    readFiles(e.dataTransfer.files);
   };
 
   const handleSubmit = e => {
@@ -260,46 +299,55 @@ function ProductForm({ initial, onSave, onClose }) {
           <label>MOQ (Cantidad Mínima de Pedido) *</label>
           <input type="number" min="1" value={form.moq} onChange={e => set('moq', e.target.value)} placeholder="Ej. 50" />
         </div>
+
         <div className="form-group">
-          <label>Imagen del Producto</label>
-          <div
-            className={`upload-zone ${dragging ? 'dragging' : ''} ${form.image ? 'has-image' : ''}`}
-            onDragOver={e => { e.preventDefault(); setDragging(true); }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={handleDrop}
-            onClick={() => document.getElementById('file-input').click()}
-          >
-            {form.image ? (
-              <>
-                <img src={form.image} alt="vista previa" />
-                <div className="upload-overlay">
-                  <span>Clic o arrastra para reemplazar</span>
+          <label>Imágenes del Producto ({form.images.length}/{MAX_IMAGES})</label>
+
+          {/* Thumbnail strip */}
+          {form.images.length > 0 && (
+            <div className="img-strip">
+              {form.images.map((src, i) => (
+                <div key={i} className="img-thumb">
+                  <img src={src} alt={`foto ${i + 1}`} />
+                  <button type="button" className="img-thumb-remove" onClick={() => removeImage(i)}>×</button>
                 </div>
-              </>
-            ) : (
-              <div className="upload-placeholder">
-                <span className="upload-icon">📷</span>
-                <span className="upload-text">Clic para subir o arrastra aquí</span>
-                <span className="upload-hint">Compatible con JPG, PNG, WEBP</span>
+              ))}
+            </div>
+          )}
+
+          {/* Upload zone — hidden when max reached */}
+          {form.images.length < MAX_IMAGES && (
+            <>
+              <div
+                className={`upload-zone ${draggingIdx === 0 ? 'dragging' : ''}`}
+                onDragOver={e => { e.preventDefault(); setDraggingIdx(0); }}
+                onDragLeave={() => setDraggingIdx(null)}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById('file-input-multi').click()}
+              >
+                <div className="upload-placeholder">
+                  <span className="upload-icon">📷</span>
+                  <span className="upload-text">Clic para subir o arrastra aquí</span>
+                  <span className="upload-hint">
+                    JPG, PNG, WEBP · Puedes subir hasta {MAX_IMAGES - form.images.length} imagen{MAX_IMAGES - form.images.length !== 1 ? 'es' : ''} más
+                  </span>
+                </div>
               </div>
-            )}
-          </div>
-          <input
-            id="file-input"
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handleFileInput}
-          />
-          {form.image && (
-            <button type="button" className="btn-remove-image" onClick={() => set('image', '')}>
-              Quitar imagen
-            </button>
+              <input
+                id="file-input-multi"
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={e => readFiles(e.target.files)}
+              />
+            </>
           )}
         </div>
+
         <div className="form-group">
           <label>Video de YouTube (URL)</label>
-          <input value={form.videoUrl} onChange={e => set('videoUrl', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+          <input value={form.videoUrl || ''} onChange={e => set('videoUrl', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
         </div>
         <div className="form-group">
           <label>Detalles / Descripción</label>
@@ -317,9 +365,7 @@ function ProductForm({ initial, onSave, onClose }) {
 function ProductDetail({ product, onClose, onEdit }) {
   return (
     <>
-      <div className="detail-image">
-        {product.image ? <img src={product.image} alt={product.name} /> : '👕'}
-      </div>
+      <ImageCarousel images={product.images} alt={product.name} height={280} borderRadius="14px 14px 0 0" />
       <div className="detail-body">
         <div>
           <div className="detail-category">{product.category}</div>
@@ -345,12 +391,7 @@ function ProductDetail({ product, onClose, onEdit }) {
         {product.videoUrl && (
           <>
             <hr className="detail-divider" />
-            <a
-              href={product.videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-ver-mas"
-            >
+            <a href={product.videoUrl} target="_blank" rel="noopener noreferrer" className="btn-ver-mas">
               ▶ VER MAS
             </a>
           </>
@@ -453,8 +494,8 @@ export default function App() {
         <div className="catalog-grid">
           {filtered.map(p => (
             <div className="product-card" key={p.id}>
-              <div className="card-image" onClick={() => setModal({ type: 'view', product: p })}>
-                {p.image ? <img src={p.image} alt={p.name} /> : '👕'}
+              <div onClick={() => setModal({ type: 'view', product: p })}>
+                <ImageCarousel images={p.images} alt={p.name} height={220} borderRadius="12px 12px 0 0" />
               </div>
               <div className="card-body" onClick={() => setModal({ type: 'view', product: p })}>
                 <div className="card-category">{p.category}</div>
