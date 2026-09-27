@@ -3,10 +3,7 @@ import emailjs from '@emailjs/browser';
 import {
   collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot
 } from 'firebase/firestore';
-import {
-  ref as storageRef, uploadString, getDownloadURL
-} from 'firebase/storage';
-import { db, storage } from './firebase';
+import { db } from './firebase';
 import './App.css';
 
 const EMAILJS_SERVICE_ID  = 'service_r4ky2a';
@@ -49,18 +46,29 @@ const SEED_PRODUCTS = [
   },
 ];
 
-// Upload a base64 image to Firebase Storage; return the download URL.
-// If src is already an https URL, return it as-is (already uploaded).
-async function uploadImage(src, productId, idx) {
-  if (!src || src.startsWith('http')) return src;
-  const path = `products/${productId}/${idx}_${Date.now()}`;
-  const ref = storageRef(storage, path);
-  await uploadString(ref, src, 'data_url');
-  return getDownloadURL(ref);
+// Compress a base64 image using canvas (max 900px, JPEG 0.75 quality).
+// Already-compressed or URL images pass through unchanged.
+function compressImage(src, maxPx = 900, quality = 0.75) {
+  if (!src || src.startsWith('http')) return Promise.resolve(src);
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
 }
 
-async function uploadAllImages(images, productId) {
-  return Promise.all((images || []).map((src, i) => uploadImage(src, productId, i)));
+async function compressAllImages(images) {
+  return Promise.all((images || []).map(src => compressImage(src)));
 }
 
 // ── Image carousel ─────────────────────────────────────────────
@@ -429,9 +437,8 @@ export default function App() {
   const handleAdd = async data => {
     setUploading(true);
     try {
-      const tempId = `new_${Date.now()}`;
-      const imageUrls = await uploadAllImages(data.images, tempId);
-      await addDoc(collection(db, 'products'), { ...data, images: imageUrls });
+      const compressed = await compressAllImages(data.images);
+      await addDoc(collection(db, 'products'), { ...data, images: compressed });
       setModal(null);
     } catch (e) {
       console.error(e);
@@ -443,9 +450,9 @@ export default function App() {
   const handleEdit = async data => {
     setUploading(true);
     try {
-      const imageUrls = await uploadAllImages(data.images, data.id);
+      const compressed = await compressAllImages(data.images);
       const { id, ...fields } = data;
-      await updateDoc(doc(db, 'products', id), { ...fields, images: imageUrls });
+      await updateDoc(doc(db, 'products', id), { ...fields, images: compressed });
       setModal(null);
     } catch (e) {
       console.error(e);
