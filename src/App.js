@@ -48,7 +48,7 @@ const SEED_PRODUCTS = [
 
 // Compress a base64 image using canvas (max 900px, JPEG 0.75 quality).
 // Already-compressed or URL images pass through unchanged.
-function compressImage(src, maxPx = 900, quality = 0.75) {
+function compressImage(src, maxPx = 600, quality = 0.55) {
   if (!src || src.startsWith('http')) return Promise.resolve(src);
   return new Promise(resolve => {
     const img = new Image();
