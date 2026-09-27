@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
+import {
+  collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot
+} from 'firebase/firestore';
+import {
+  ref as storageRef, uploadString, getDownloadURL
+} from 'firebase/storage';
+import { db, storage } from './firebase';
 import './App.css';
 
 const EMAILJS_SERVICE_ID  = 'service_r4ky2a';
@@ -7,61 +14,56 @@ const EMAILJS_TEMPLATE_ID = 'template_tf7c2v4';
 const EMAILJS_PUBLIC_KEY  = 'vjckp7pkqU64Ma_fv';
 
 const LEAD_STORAGE_KEY = 'td_lead_submitted';
-const STORAGE_KEY = 'catalog_products';
-const ADMIN_PASSWORD = '1234';
-const MAX_IMAGES = 5;
+const ADMIN_PASSWORD   = '1234';
+const MAX_IMAGES       = 5;
 
 const CATEGORIES = ['Todos', 'Ropa Niños', 'Ropa Adultos', 'Calzado', 'Accesorios', 'Mercancía General'];
 
-// Normalize old single-image products to images array
-function normalizeProduct(p) {
-  if (p.images && p.images.length > 0) return p;
-  return { ...p, images: p.image ? [p.image] : [] };
-}
-
-const SAMPLE_PRODUCTS = [
+const SEED_PRODUCTS = [
   {
-    id: 1,
     name: 'Camiseta Blanca Clásica',
     category: 'Ropa Adultos',
     price: 12.99,
     moq: 50,
     images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop'],
-    details: 'Camiseta básica de algodón 100% premium. Disponible en tallas XS–3XL. Corte unisex. Perfecta para uso diario y fácil de combinar con cualquier outfit.',
+    details: 'Camiseta básica de algodón 100% premium. Disponible en tallas XS–3XL.',
+    videoUrl: '',
   },
   {
-    id: 2,
     name: 'Jeans Tiro Alto',
     category: 'Ropa Adultos',
     price: 34.50,
     moq: 30,
     images: ['https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop'],
-    details: 'Mezclilla stretch con tiro alto. Estilo 5 bolsillos. Disponible en lavado claro, oscuro y negro. Tallas 24–38.',
+    details: 'Mezclilla stretch con tiro alto. Tallas 24–38.',
+    videoUrl: '',
   },
   {
-    id: 3,
     name: 'Vestido Midi Floral',
     category: 'Ropa Adultos',
     price: 28.00,
     moq: 20,
     images: ['https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop'],
-    details: 'Vestido midi de gasa ligera con estampado floral. Cintura ajustable con lazo. Escote en V. Ideal para colecciones primavera/verano.',
+    details: 'Vestido midi de gasa ligera con estampado floral.',
+    videoUrl: '',
   },
 ];
 
-function loadProducts() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved).map(normalizeProduct);
-  } catch {}
-  return SAMPLE_PRODUCTS;
+// Upload a base64 image to Firebase Storage; return the download URL.
+// If src is already an https URL, return it as-is (already uploaded).
+async function uploadImage(src, productId, idx) {
+  if (!src || src.startsWith('http')) return src;
+  const path = `products/${productId}/${idx}_${Date.now()}`;
+  const ref = storageRef(storage, path);
+  await uploadString(ref, src, 'data_url');
+  return getDownloadURL(ref);
 }
 
-function getNextId(products) {
-  return products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+async function uploadAllImages(images, productId) {
+  return Promise.all((images || []).map((src, i) => uploadImage(src, productId, i)));
 }
 
-// Small carousel used on both the card and the detail modal
+// ── Image carousel ─────────────────────────────────────────────
 function ImageCarousel({ images, alt, height, borderRadius }) {
   const [idx, setIdx] = useState(0);
   const imgs = images && images.length > 0 ? images : [];
@@ -70,9 +72,7 @@ function ImageCarousel({ images, alt, height, borderRadius }) {
   const next = e => { e.stopPropagation(); setIdx(i => (i + 1) % imgs.length); };
 
   if (imgs.length === 0) {
-    return (
-      <div className="carousel-empty" style={{ height, borderRadius }}>👕</div>
-    );
+    return <div className="carousel-empty" style={{ height, borderRadius }}>👕</div>;
   }
 
   return (
@@ -84,11 +84,8 @@ function ImageCarousel({ images, alt, height, borderRadius }) {
           <button className="carousel-btn carousel-next" onClick={next}>›</button>
           <div className="carousel-dots">
             {imgs.map((_, i) => (
-              <span
-                key={i}
-                className={`carousel-dot ${i === idx ? 'active' : ''}`}
-                onClick={e => { e.stopPropagation(); setIdx(i); }}
-              />
+              <span key={i} className={`carousel-dot ${i === idx ? 'active' : ''}`}
+                onClick={e => { e.stopPropagation(); setIdx(i); }} />
             ))}
           </div>
         </>
@@ -97,6 +94,7 @@ function ImageCarousel({ images, alt, height, borderRadius }) {
   );
 }
 
+// ── Lead capture modal ─────────────────────────────────────────
 function LeadModal({ onClose }) {
   const [form, setForm] = useState({ nombre: '', apellido: '', email: '', telefono: '', tipo: '' });
   const [sending, setSending] = useState(false);
@@ -115,9 +113,9 @@ function LeadModal({ onClose }) {
     setError('');
     try {
       await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        { nombre: form.nombre, apellido: form.apellido, email: form.email, telefono: form.telefono, tipo: form.tipo, to_email: 'totaldeals.ventas@gmail.com' },
+        EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID,
+        { nombre: form.nombre, apellido: form.apellido, email: form.email,
+          telefono: form.telefono, tipo: form.tipo, to_email: 'totaldeals.ventas@gmail.com' },
         EMAILJS_PUBLIC_KEY
       );
       setSent(true);
@@ -199,6 +197,7 @@ function LeadModal({ onClose }) {
   );
 }
 
+// ── Admin login modal ───────────────────────────────────────────
 function AdminLoginModal({ onLogin, onClose }) {
   const [pwd, setPwd] = useState('');
   const [error, setError] = useState('');
@@ -234,28 +233,25 @@ function AdminLoginModal({ onLogin, onClose }) {
   );
 }
 
-function ProductForm({ initial, onSave, onClose }) {
+// ── Product form (add / edit) ───────────────────────────────────
+function ProductForm({ initial, onSave, onClose, uploading }) {
   const initImages = initial ? (initial.images || (initial.image ? [initial.image] : [])) : [];
   const [form, setForm] = useState(
     initial
       ? { ...initial, images: initImages }
       : { name: '', category: 'Ropa Adultos', price: '', moq: '', images: [], details: '', videoUrl: '' }
   );
-  const [draggingIdx, setDraggingIdx] = useState(null);
+  const [dragging, setDragging] = useState(false);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
   const readFiles = files => {
     const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-    if (imageFiles.length === 0) {
-      alert('Por favor selecciona archivos de imagen.');
-      return;
-    }
-    // Read all selected files; the updater function enforces the MAX_IMAGES cap
+    if (imageFiles.length === 0) { alert('Por favor selecciona archivos de imagen.'); return; }
     imageFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = e => setForm(f => {
-        if (f.images.length >= MAX_IMAGES) return f; // cap inside updater to avoid stale closure
+        if (f.images.length >= MAX_IMAGES) return f;
         return { ...f, images: [...f.images, e.target.result] };
       });
       reader.readAsDataURL(file);
@@ -263,12 +259,6 @@ function ProductForm({ initial, onSave, onClose }) {
   };
 
   const removeImage = idx => setForm(f => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
-
-  const handleDrop = e => {
-    e.preventDefault();
-    setDraggingIdx(null);
-    readFiles(e.dataTransfer.files);
-  };
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -304,8 +294,6 @@ function ProductForm({ initial, onSave, onClose }) {
 
         <div className="form-group">
           <label>Imágenes del Producto ({form.images.length}/{MAX_IMAGES})</label>
-
-          {/* Thumbnail strip */}
           {form.images.length > 0 && (
             <div className="img-strip">
               {form.images.map((src, i) => (
@@ -316,15 +304,13 @@ function ProductForm({ initial, onSave, onClose }) {
               ))}
             </div>
           )}
-
-          {/* Upload zone — hidden when max reached */}
           {form.images.length < MAX_IMAGES && (
             <>
               <div
-                className={`upload-zone ${draggingIdx === 0 ? 'dragging' : ''}`}
-                onDragOver={e => { e.preventDefault(); setDraggingIdx(0); }}
-                onDragLeave={() => setDraggingIdx(null)}
-                onDrop={handleDrop}
+                className={`upload-zone ${dragging ? 'dragging' : ''}`}
+                onDragOver={e => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={e => { e.preventDefault(); setDragging(false); readFiles(e.dataTransfer.files); }}
                 onClick={() => document.getElementById('file-input-multi').click()}
               >
                 <div className="upload-placeholder">
@@ -335,14 +321,8 @@ function ProductForm({ initial, onSave, onClose }) {
                   </span>
                 </div>
               </div>
-              <input
-                id="file-input-multi"
-                type="file"
-                accept="image/*"
-                multiple
-                style={{ display: 'none' }}
-                onChange={e => readFiles(e.target.files)}
-              />
+              <input id="file-input-multi" type="file" accept="image/*" multiple
+                style={{ display: 'none' }} onChange={e => readFiles(e.target.files)} />
             </>
           )}
         </div>
@@ -357,13 +337,16 @@ function ProductForm({ initial, onSave, onClose }) {
         </div>
       </div>
       <div className="form-actions">
-        <button type="button" className="btn-cancel" onClick={onClose}>Cancelar</button>
-        <button type="submit" className="btn-save">{initial ? 'Guardar Cambios' : 'Agregar Producto'}</button>
+        <button type="button" className="btn-cancel" onClick={onClose} disabled={uploading}>Cancelar</button>
+        <button type="submit" className="btn-save" disabled={uploading}>
+          {uploading ? 'Guardando...' : (initial ? 'Guardar Cambios' : 'Agregar Producto')}
+        </button>
       </div>
     </form>
   );
 }
 
+// ── Product detail view ─────────────────────────────────────────
 function ProductDetail({ product, onClose, onEdit }) {
   return (
     <>
@@ -407,18 +390,35 @@ function ProductDetail({ product, onClose, onEdit }) {
   );
 }
 
+// ── Main App ────────────────────────────────────────────────────
 export default function App() {
-  const [products, setProducts] = useState(loadProducts);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('Todos');
-  const [modal, setModal] = useState(null);
-  const [showLead, setShowLead] = useState(!localStorage.getItem(LEAD_STORAGE_KEY));
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [products, setProducts]       = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [uploading, setUploading]     = useState(false);
+  const [search, setSearch]           = useState('');
+  const [category, setCategory]       = useState('Todos');
+  const [modal, setModal]             = useState(null);
+  const [showLead, setShowLead]       = useState(!localStorage.getItem(LEAD_STORAGE_KEY));
+  const [isAdmin, setIsAdmin]         = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
+  // Subscribe to Firestore in real time
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  }, [products]);
+    const unsub = onSnapshot(
+      collection(db, 'products'),
+      snap => {
+        const docs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        setProducts(docs);
+        setLoading(false);
+        // Seed sample data once if the collection is empty
+        if (snap.empty) {
+          SEED_PRODUCTS.forEach(p => addDoc(collection(db, 'products'), p));
+        }
+      },
+      err => { console.error(err); setLoading(false); }
+    );
+    return unsub;
+  }, []);
 
   const filtered = products.filter(p => {
     const matchCat = category === 'Todos' || p.category === category;
@@ -426,19 +426,41 @@ export default function App() {
     return matchCat && matchSearch;
   });
 
-  const handleAdd = data => {
-    setProducts(ps => [...ps, { ...data, id: getNextId(ps) }]);
-    setModal(null);
+  const handleAdd = async data => {
+    setUploading(true);
+    try {
+      const tempId = `new_${Date.now()}`;
+      const imageUrls = await uploadAllImages(data.images, tempId);
+      await addDoc(collection(db, 'products'), { ...data, images: imageUrls });
+      setModal(null);
+    } catch (e) {
+      console.error(e);
+      alert('Error al guardar el producto. Intenta de nuevo.');
+    }
+    setUploading(false);
   };
 
-  const handleEdit = data => {
-    setProducts(ps => ps.map(p => p.id === data.id ? data : p));
-    setModal(null);
+  const handleEdit = async data => {
+    setUploading(true);
+    try {
+      const imageUrls = await uploadAllImages(data.images, data.id);
+      const { id, ...fields } = data;
+      await updateDoc(doc(db, 'products', id), { ...fields, images: imageUrls });
+      setModal(null);
+    } catch (e) {
+      console.error(e);
+      alert('Error al actualizar el producto. Intenta de nuevo.');
+    }
+    setUploading(false);
   };
 
-  const handleDelete = id => {
-    if (window.confirm('¿Eliminar este producto?')) {
-      setProducts(ps => ps.filter(p => p.id !== id));
+  const handleDelete = async id => {
+    if (!window.confirm('¿Eliminar este producto?')) return;
+    try {
+      await deleteDoc(doc(db, 'products', id));
+    } catch (e) {
+      console.error(e);
+      alert('Error al eliminar. Intenta de nuevo.');
     }
   };
 
@@ -451,7 +473,7 @@ export default function App() {
         </div>
         <div className="header-contact">
           <a href="https://wa.me/15628337556" target="_blank" rel="noopener noreferrer" className="whatsapp-link">
-            <svg className="whatsapp-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <svg className="whatsapp-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
               <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.862L.054 23.5a.5.5 0 0 0 .609.61l5.802-1.522A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.9 0-3.68-.524-5.198-1.433l-.374-.222-3.878 1.017 1.034-3.77-.245-.389A9.96 9.96 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
             </svg>
@@ -475,18 +497,19 @@ export default function App() {
       </header>
 
       <div className="toolbar">
-        <input
-          className="search-input"
-          placeholder="Buscar productos..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <input className="search-input" placeholder="Buscar productos..."
+          value={search} onChange={e => setSearch(e.target.value)} />
         <select className="filter-select" value={category} onChange={e => setCategory(e.target.value)}>
           {CATEGORIES.map(c => <option key={c}>{c}</option>)}
         </select>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="empty-state">
+          <div className="empty-icon">⏳</div>
+          <h3>Cargando catálogo...</h3>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">👗</div>
           <h3>No se encontraron productos</h3>
@@ -526,7 +549,7 @@ export default function App() {
       )}
 
       {modal && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setModal(null)}>
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && !uploading && setModal(null)}>
           <div className="modal">
             {modal.type === 'view' && (
               <>
@@ -547,7 +570,7 @@ export default function App() {
                   <h2>Agregar Nuevo Producto</h2>
                   <button className="btn-close" onClick={() => setModal(null)}>×</button>
                 </div>
-                <ProductForm onSave={handleAdd} onClose={() => setModal(null)} />
+                <ProductForm onSave={handleAdd} onClose={() => setModal(null)} uploading={uploading} />
               </>
             )}
             {modal.type === 'edit' && (
@@ -560,6 +583,7 @@ export default function App() {
                   initial={modal.product}
                   onSave={data => handleEdit({ id: modal.product.id, ...data })}
                   onClose={() => setModal(null)}
+                  uploading={uploading}
                 />
               </>
             )}
