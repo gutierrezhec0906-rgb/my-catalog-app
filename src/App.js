@@ -11,7 +11,7 @@ const STORAGE_KEY = 'catalog_products';
 const ADMIN_PASSWORD = 'totaldeals2024';
 const MAX_IMAGES = 5;
 
-const CATEGORIES = ['Todos', 'Tops', 'Bottoms', 'Vestidos', 'Abrigos', 'Accesorios', 'Calzado', 'Otro'];
+const CATEGORIES = ['Todos', 'Ropa Niños', 'Ropa Adultos', 'Calzado', 'Accesorios', 'Mercancía General'];
 
 // Normalize old single-image products to images array
 function normalizeProduct(p) {
@@ -23,7 +23,7 @@ const SAMPLE_PRODUCTS = [
   {
     id: 1,
     name: 'Camiseta Blanca Clásica',
-    category: 'Tops',
+    category: 'Ropa Adultos',
     price: 12.99,
     moq: 50,
     images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop'],
@@ -32,7 +32,7 @@ const SAMPLE_PRODUCTS = [
   {
     id: 2,
     name: 'Jeans Tiro Alto',
-    category: 'Bottoms',
+    category: 'Ropa Adultos',
     price: 34.50,
     moq: 30,
     images: ['https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop'],
@@ -41,7 +41,7 @@ const SAMPLE_PRODUCTS = [
   {
     id: 3,
     name: 'Vestido Midi Floral',
-    category: 'Vestidos',
+    category: 'Ropa Adultos',
     price: 28.00,
     moq: 20,
     images: ['https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop'],
